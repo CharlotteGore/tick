@@ -1,0 +1,15 @@
+{
+  "name": "tick",
+  "repo": "charlottegore/tick",
+  "description": "An animation frame tick handler",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {
+    "component/raf": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}
