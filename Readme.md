@@ -54,7 +54,7 @@
 
 ### .time()
 
-  Returns the 'time' according to Tick, which may vary depending on whether it's using `performance` or `Date` for timings. `time()` returns the time elapsed since the page loaded.
+  Returns a normalised (relative to the timings passed to callbacks) 'time' according to Tick, which may vary depending on whether it's using `performance` or `Date` for timings. `time()` returns the time elapsed since the page loaded.
 
 ## About
 
