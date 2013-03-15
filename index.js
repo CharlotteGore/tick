@@ -75,10 +75,25 @@ Tick.prototype = {
 	add : (function( task ){
 
 		var create = function(callback, start, stop){
+
+			var paused = false;
+			var pausedAt;
+
 			return {
 				update : function( now ){
-					callback( now - start, stop);					
-				}
+					if(!paused){
+					callback( now - start, stop);
+					}					
+				},
+				pause : function(){
+					paused = true;
+					pausedAt = now();
+				},
+				resume : function(){
+					start = start + now() - pausedAt;
+					paused = false; 
+				},
+				stop : stop
 			}
 				
 		};
@@ -92,7 +107,9 @@ Tick.prototype = {
 			callbacks[id] = create( callback, now(), stop);
 			return {
 				id : id,
-				stop : stop
+				stop : stop,
+				pause : callbacks[id].pause,
+				resume : callbacks[id].resume
 			}
 		}
 
@@ -102,6 +119,32 @@ Tick.prototype = {
 
 		return now();
 
+	},
+
+	pause : function(){
+
+		for(i in callbacks){
+			if(callbacks.hasOwnProperty(i)){
+				callbacks[i].pause();
+			}
+		}
+
+	},
+
+	resume : function(){
+		for(i in callbacks){
+			if(callbacks.hasOwnProperty(i)){
+				callbacks[i].resume();
+			}
+		}
+	},
+
+	stop : function(){
+		for(i in callbacks){
+			if(callbacks.hasOwnProperty(i)){
+				callbacks[i].stop();
+			}
+		}
 	}
 
 };
