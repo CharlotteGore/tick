@@ -1,19 +1,16 @@
 var raf = require('raf'),
-	getTime = Date.now || function(){ return (new Date()).getTime(); },
-	start = getTime(),
-	perf = window.performance,
-	perfNow = perf && perf.now
-
-(window.performance && window.performance.now)
+	time = Date.now || function(){ return (new Date()).getTime(); },
+	start = time(),
+	now;
 
 // normalise the time functionality
 if(window.performance && window.performance.now){
 
-	time = function(){ return performance.now() };
+	now = function(){ return performance.now() };
 	start = performance.timing.navigationStart;
 
 } else {
-	time = function(){ return getTime() - start; }
+	now = function(){ return time() - start; }
 }
 
 var callbacks = {};
@@ -58,7 +55,7 @@ var Tick = function(){
 		} else {
 
 			tick = function tick(){
-				runCallbacks.call( self, time() )
+				runCallbacks.call( self, now() )
 				raf(tick);
 			}
 
@@ -79,8 +76,8 @@ Tick.prototype = {
 
 		var create = function(callback, start, stop){
 			return {
-				update : function( time ){
-					callback( time - start, stop);					
+				update : function( now ){
+					callback( now - start, stop);					
 				}
 			}
 				
@@ -92,7 +89,7 @@ Tick.prototype = {
 			var stop = function(){
 				delete(callbacks[id]);				
 			}
-			callbacks[id] = create( callback, time(), stop);
+			callbacks[id] = create( callback, now(), stop);
 			return {
 				id : id,
 				stop : stop
@@ -101,9 +98,9 @@ Tick.prototype = {
 
 	})(),
 
-	time : function(){
+	now : function(){
 
-		return time();
+		return now();
 
 	}
 
