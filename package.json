@@ -1,0 +1,17 @@
+{
+  "name"          : "gm-tick",
+  "description"   : "Single, managed animation frame loop for games, animations and audio functions.",
+  "url"           : "http://charlottegore.github.io",
+  "keywords"      : ["tick", "delta", "animation", "games","async","callbacks", "pause", "resume","client", "browser"],
+  "author"        : "Charlotte Gore <charlotte@greenmesa.co.uk>",
+  "dependencies"  : {
+    "raf" : "~2.0.1"
+  },
+  "main"          : "index.js",
+  "version"       : "1.0.2",
+  "license"       : "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/charlottegore/tick.git"
+  }
+}

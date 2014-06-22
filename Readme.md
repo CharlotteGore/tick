@@ -6,13 +6,31 @@
   
   Supports global pause and resume, and pause and resume on the level of individual tasks.
 
+  This module has been used extensively in co-ordination animations, supporting game loops and web audio stuff. It is solid. 
+
 ## Installation
 
+Browserify/NPM
+
+```sh
+    $ npm install --save gm-tick
+```
+
+```js
+  var tick = require('gm-tick');
+```
+
+Component
+
+```sh
     $ component install charlottegore/tick
+```
+
+```js
+  var tick = require('tick');
+```
 
 ## API
-
-    var tick = require('tick');
 
 ### .add()
 
@@ -84,10 +102,6 @@
     > handle.resume();
     > // callback fires again.
  
-
-## About
-
-  This module is designed to replace Render-Loop and RenderLoopTask as the central 'tick' handler for my Tween module. It's smaller, more lightweight and more focused on simply handling a bunch of callbacks on tick events as fast and efficiently as possible. The scheduling stuff will come back in separate modules. Right now it's not required!
 
 ## License
 

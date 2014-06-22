@@ -2,7 +2,7 @@
   "name": "tick",
   "repo": "charlottegore/tick",
   "description": "An animation frame tick handler",
-  "version": "0.0.1",
+  "version": "1.0.2",
   "keywords": [],
   "dependencies": {
     "component/raf": "*"
