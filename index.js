@@ -163,19 +163,17 @@ function frameHandler(possibleTimestamp){
 
 function capabilityChecker (possibleTimestamp){
   if (precise){
-    if (possibleTimestamp && /\./.test(possibleTimestamp.toString())){
-      // some raf implementations pass a sub milisecond timestamp..
-      this._runner = precisionRunner.bind(this);
-    } else {
-      // some raf implementations do not. We get one manually from performance.now()
-      this._runner = fallbackPrecisionRunner.bind(this);
-    }
+    this._runner = fallbackPrecisionRunner.bind(this);
   } else {
     // and some browsers are just entirely without hope or remorse.
     this._runner = fallbackRunner.bind(this);
   }
 
 }
+
+/*
+  // for some reason the timestamp being passed from 
+  // raf is totally broken therefore I can't use this mode...
 
 function precisionRunner (timestamp, delta){
   for (var id in this.fns){
@@ -184,6 +182,7 @@ function precisionRunner (timestamp, delta){
     }
   }
 }
+*/
 
 function fallbackPrecisionRunner (delta){
   var timestamp = window.performance.now();
