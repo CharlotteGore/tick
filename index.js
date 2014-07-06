@@ -42,13 +42,17 @@ var Tick = function(){
 
 Tick.prototype = {
 
-  add : function (callback){
+  add : function (callback, start){
 
     var id = ++uuid;
 
     var _stop = stop.bind(this, id);
 
-    this.fns[id] = create.call(this, callback, now(), _stop);
+    if (!start){
+      start = now();
+    }
+
+    this.fns[id] = create.call(this, callback, start, _stop);
     this.activeCallbacks++;
     // trigger requesting animationFrames if this it the first handler..
     if (this.activeCallbacks === 1){

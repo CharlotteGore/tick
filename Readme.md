@@ -30,13 +30,10 @@ Current tested version:
 
 ## API
 
-### .add( function(elased, delta, stop) { ... } )
+### .add( function(elased, delta, stop) { ... }  [, start])
 
-Adds a callback to be executed every animationFrame. Callbacks are passed 
-the passed ms elapsed since callback was added and ms elapsed since the last 
-time the callback fired. 
-
-The third parameter is a function which will stop the callback firing again.
+Adds a callback to be executed every animationFrame which, when executed, is passed
+the amount of time elapsed and the time since the last frame.
 
 #### Example
 
@@ -52,6 +49,10 @@ var handle = tick.add( function( elapsed, delta, stop ){
 
 });
 ```
+
+Optionally a 'start' parameter can be passed to .add(). Callbacks begin firing on animationFrames 
+immediately, but the elapsed parameter will be negative, counting up to zero until the start time arrives, at 
+which point it continues as normal. Very NASA. 
 
 ### .pause()
 
