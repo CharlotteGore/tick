@@ -1,154 +1,210 @@
+// binding polyfill
+require('bindpolyfill');
+
 var raf = require('raf'),
-	time = Date.now || function(){ return (new Date()).getTime(); },
-	start = time(),
-	now;
+  caf = require('raf').cancel,
+  hasOwn = Object.prototype.hasOwnProperty,
+  time = Date.now || function(){ return (new Date()).getTime(); },
+  start = time(),
+  now,
+  precise = false;
 
-// normalise the time functionality
-if(window.performance && window.performance.now){
+// use the highest precision timer available
+if ('performance' in window && window.performance.now){
 
-	now = function(){ return performance.now() };
-	start = performance.timing.navigationStart;
+  now = function(){ return window.performance.now(); };
+  start = window.performance.timing.navigationStart;
+  precise = true;
 
 } else {
-	now = function(){ return time() - start; }
+
+  now = function(){ return time() - start; };
+
 }
 
-var callbacks = {};
 var uuid = 0;
 
-var runCallbacks = function( timestamp ){
-
-	var self = this;
-	for(i in callbacks){
-		if(callbacks.hasOwnProperty(i)){
-			callbacks[i].update( timestamp );
-		}
-	}
-	return true;
-};
 
 var Tick = function(){
 
-	var self = this;
+  this.fns = {};
+  this.activeCallbacks = 0;
 
-	var tick;
+  // get our frame handler and our runners sorted..
+  this.frameHandler = frameHandler.bind(this);
+  raf(capabilityChecker.bind(this));
 
-	raf(function( elapsed ){
+  this._requestid = null;
 
-		if(window.performance && window.performance.now){
-
-			if(elapsed && /\./.test(elapsed.toString())){
-				// requestAnimationFrame returns sexy sub-millisecond elapsed time
-				tick = function tick( timestamp ){
-					runCallbacks.call( self, timestamp );
-					raf(tick);
-				} 
-
- 			} else {
- 				// requestAnimationFrame returns a lame unix timestamp. At least we've got performance.now() though.
- 				tick = function tick(){
- 					runCallbacks.call( self, performance.now() );
- 					raf(tick);
- 				}
- 			}
-
-		} else {
-
-			tick = function tick(){
-				runCallbacks.call( self, now() )
-				raf(tick);
-			}
-
-		}
-
-		// go go go!
-		raf(tick);
-
-	})
-
-	return this;
+  return this;
 
 };
 
 Tick.prototype = {
 
-	add : (function( task ){
+  add : function (callback){
 
-		var create = function(callback, start, stop){
+    var id = ++uuid;
 
-			var paused = false;
-			var pausedAt;
+    var _stop = stop.bind(this, id);
 
-			return {
-				update : function( now ){
-					if(!paused){
-					callback( now - start, stop);
-					}					
-				},
-				pause : function(){
-					paused = true;
-					pausedAt = now();
-				},
-				resume : function(){
-					start = start + now() - pausedAt;
-					paused = false; 
-				},
-				stop : stop
-			}
-				
-		};
+    this.fns[id] = create.call(this, callback, now(), _stop);
+    this.activeCallbacks++;
+    // trigger requesting animationFrames if this it the first handler..
+    if (this.activeCallbacks === 1){
+      this._lastTick = now();
+      this._requestid = raf(this.frameHandler);
+    }
+    return {
+      id : id,
+      stop : _stop,
+      pause : this.fns[id].pause,
+      resume : this.fns[id].resume
+    };
+  },
 
-		return function( callback ){
+  now : function (){
+    return now();
+  },
 
-			var id = ++uuid;
-			var stop = function(){
-				delete(callbacks[id]);				
-			}
-			callbacks[id] = create( callback, now(), stop);
-			return {
-				id : id,
-				stop : stop,
-				pause : callbacks[id].pause,
-				resume : callbacks[id].resume
-			}
-		}
+  pause : function(){
+    for (var id in this.fns){
+      if (hasOwn.call(this.fns, id)){
+        this.fns[id].pause();
+      }
+    }
+  },
 
-	})(),
+  resume : function(){
+    for (var id in this.fns){
+      if (hasOwn.call(this.fns, id)){
+        this.fns[id].resume();
+      }
+    }
+  },
 
-	now : function(){
+  stop : function(){
+    var fns = [];
+    for (var id in this.fns){
+      if (hasOwn.call(this.fns, id)){
+        // call stop and get a destructor function back..
+        fns.push(this.fns[id].stop('defer'));
+      }
+    }
+    // run all the destructor functions
+    for (var i = 0; i < fns.length; i++){
+      fns[i].call(this);
+    }
+  },
 
-		return now();
+  isRunning : function (){
+    return (this._requestid !== null);
+  },
 
-	},
+  runningHandlers : function (){
+    return this.activeCallbacks;
+  },
 
-	pause : function(){
-
-		for(i in callbacks){
-			if(callbacks.hasOwnProperty(i)){
-				callbacks[i].pause();
-			}
-		}
-
-	},
-
-	resume : function(){
-		for(i in callbacks){
-			if(callbacks.hasOwnProperty(i)){
-				callbacks[i].resume();
-			}
-		}
-	},
-
-	stop : function(){
-		for(i in callbacks){
-			if(callbacks.hasOwnProperty(i)){
-				callbacks[i].stop();
-			}
-		}
-	}
+  FPS : function (){
+    return Math.floor((1000 / this._tickDelta) * 100) / 100;
+  }
 
 };
+
+function create (callback, start, stop){
+
+  var paused = false;
+  var pausedAt;
+
+  return {
+    update : function( now, delta ){
+      if(!paused){
+        callback( now - start, delta, stop);
+      }
+    },
+    pause : function(){
+      paused = true;
+      pausedAt = now();
+    },
+    resume : function(){
+      start = start + now() - pausedAt;
+      paused = false;
+    },
+    stop : stop
+  };
+}
+
+function stop (id, defer){
+  // stop requesting animationFrames if there's no more handlers..
+  this.activeCallbacks--;
+  if (this.activeCallbacks === 0){
+    caf(this._requestid);
+    this._requestid = null;
+  }
+  if(!defer){
+    delete(this.fns[id]);
+  } else {
+    return function(){
+      delete(this.fns[id]);
+    };
+  }
+}
+
+function frameHandler(possibleTimestamp){
+  if (this.activeCallbacks){
+    // establish time passed since last frame...
+    var curr = now();
+    this._tickDelta = curr - this._lastTick;
+    this._lastTick = curr;
+    this._runner(possibleTimestamp, this._tickDelta);
+    this._requestid = raf(this.frameHandler);
+  }
+}
+
+function capabilityChecker (possibleTimestamp){
+  if (precise){
+    if (possibleTimestamp && /\./.test(possibleTimestamp.toString())){
+      // some raf implementations pass a sub milisecond timestamp..
+      this._runner = precisionRunner.bind(this);
+    } else {
+      // some raf implementations do not. We get one manually from performance.now()
+      this._runner = fallbackPrecisionRunner.bind(this);
+    }
+  } else {
+    // and some browsers are just entirely without hope or remorse.
+    this._runner = fallbackRunner.bind(this);
+  }
+
+}
+
+function precisionRunner (timestamp, delta){
+  for (var id in this.fns){
+    if (hasOwn.call(this.fns, id)){
+      this.fns[id].update(timestamp, delta);
+    }
+  }
+}
+
+function fallbackPrecisionRunner (delta){
+  var timestamp = window.performance.now();
+  for (var id in this.fns){
+    if (hasOwn.call(this.fns, id)){
+      this.fns[id].update(timestamp, delta);
+    }
+  }
+}
+
+function fallbackRunner (delta){
+  var timestamp = now();
+  for (var id in this.fns){
+    if (hasOwn.call(this.fns, id)){
+      this.fns[id].update(timestamp, delta);
+    }
+  }
+}
 
 var tick = new Tick();
 
 module.exports = tick;
+
+module.exports.Tick = Tick;

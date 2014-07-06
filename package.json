@@ -1,17 +1,63 @@
 {
-  "name"          : "gm-tick",
-  "description"   : "Single, managed animation frame loop for games, animations and audio functions.",
-  "url"           : "http://charlottegore.github.io",
-  "keywords"      : ["tick", "delta", "animation", "games","async","callbacks", "pause", "resume","client", "browser"],
-  "author"        : "Charlotte Gore <charlotte@greenmesa.co.uk>",
-  "dependencies"  : {
-    "raf" : "~2.0.1"
+  "name": "animation-loops",
+  "version": "2.0.0",
+  "description": "Managed animationFrame looping for games, animations and web audio functions.",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test"
   },
-  "main"          : "index.js",
-  "version"       : "1.0.2",
-  "license"       : "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/charlottegore/tick.git"
+    "url": "git@github.com:CharlotteGore/tick"
+  },
+  "dependencies": {
+    "raf": "2.0.1",
+    "bindpolyfill": "0.0.0"
+  },
+  "keywords": [
+    "requestAnimationFrame",
+    "game loop",
+    "animation manager",
+    "time manager",
+    "tick",
+    "events",
+    "games",
+    "animation",
+    "web audio",
+    "delta",
+    "time",
+    "callbacks",
+    "handles",
+    "pause",
+    "browser"
+  ],
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-browserify": "~1.3.0",
+    "grunt-mocha-test": "~0.11.0",
+    "grunt-mocha-phantomjs": "~0.3.0",
+    "grunt-contrib-jshint": "~0.6.4",
+    "grunt-contrib-watch": "~0.5.3",
+    "chai": "~1.9.0",
+    "mocha": "~1.17.1"
+  },
+  "testling": {
+    "harness": "mocha-bdd",
+    "files": "test/test.js",
+    "browsers": [
+      "ie/6..latest",
+      "chrome/22..latest",
+      "firefox/16..latest",
+      "safari/latest",
+      "opera/11.0..latest",
+      "iphone/6",
+      "ipad/6",
+      "android-browser/latest"
+    ]
+  },
+  "author": "Charlotte Gore <charlotte@greenmesa.co.uk>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/charlottegore/tick/issues"
   }
 }

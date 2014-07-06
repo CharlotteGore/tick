@@ -1,107 +1,157 @@
-# Tick
+# Animation Loops / Tick
 
-  A single animationFrame/timeout loop with normalised output across browsers. Callbacks are passed as parameters the time elapsed since the callback was added and a function to stop the callback from being called again.
+[![browser support](https://ci.testling.com/CharlotteGore/animation-timer.png)](https://ci.testling.com/CharlotteGore/animation-timer)
 
-  Uses `requestAnimationFrame` and microsecond timings if the browser supports it.
-  
-  Supports global pause and resume, and pause and resume on the level of individual tasks.
+[![Build Status](https://travis-ci.org/CharlotteGore/tick.png?branch=master)](https://travis-ci.org/CharlotteGore/tick)
 
-  This module has been used extensively in co-ordination animations, supporting game loops and web audio stuff. It is solid. 
+Low level games and graphics utility. Any situation where you need something to run around 60 times a second, `animation-loops` is your friend.
+
+- Add callbacks to be executed every requestAnimationFrame
+- All callbacks get the highest precision `time elapsed` and `delta` information available
+- Pause, resume and stop individual animations.
+- Globally Pause, resume and stop all animations.
+- Applications: Game loops, animation loops etc.
+- Covered by tests
+- Uses a polyfilled/shimed requestAnimationFrame
 
 ## Installation
 
 Browserify/NPM
 
+Current tested version:
+
 ```sh
-    $ npm install --save gm-tick
+    $ npm install --save animation-loops
 ```
 
 ```js
-  var tick = require('gm-tick');
-```
-
-Component
-
-```sh
-    $ component install charlottegore/tick
-```
-
-```js
-  var tick = require('tick');
+  var tick = require('animation-loops');
 ```
 
 ## API
 
-### .add()
+### .add( function(elased, delta, stop) { ... } )
 
-  Adds a callback to the loop to be called every tick. When the callback fires is is passed the time in milliseconds (and, if available, microseconds) since the callback was added. Returns a handle object.
+Adds a callback to be executed every animationFrame. Callbacks are passed 
+the passed ms elapsed since callback was added and ms elapsed since the last 
+time the callback fired. 
+
+The third parameter is a function which will stop the callback firing again.
 
 #### Example
 
-    var handle = tick.add( function( elapsed, stop ){
+```js
+var handle = tick.add( function( elapsed, delta, stop ){
 
-    	console.log( elapsed )
-    	if( elapsed > 5000){
-           stop(); // make sure the callback won't fire again 
-           console.log('stopped');   		
-    	}
+	console.log( elapsed, delta );
 
-    });
+	if( elapsed > 5000){
+       stop(); // make sure the callback won't fire again 
+       console.log('stopped');   		
+	}
 
-    > 1.12244043334424
-    > 4.32443350003422
-    ...
-    > 4994.00000000598
-    > 5011.00000000422
-    > stopped
+});
+```
 
 ### .pause()
 
-    require('tick').pause();
+Globally pauses all running animations. When they resume, the `elapsed` and `delta` parameters 
+in your callbacks are automatically adjusted to remove the time spent paused.
 
-  Pause everything. No callbacks will fire as long as it remains paused.
+```js
+tick.pause();
+```
   
 ### .resume()
 
-    require('tick').resume();
+Globally resume all paused animations. 
 
-  Resume everything. Elapsed time data passed to callbacks are adjusted to account for time spent paused.
+```js
+tick.resume();
+```
 
 ### .time()
 
-  Returns a normalised (relative to the timings passed to callbacks) 'time' according to Tick, which may vary depending on whether it's using `performance` or `Date` for timings. `time()` returns the time elapsed since the page loaded.
+Returns the current time using the highest precision timer available in the environment. This is to ensure 
+that developers can code against one single source of time that will be consistent with `animation-loops` and 
+not have to worry about differences between `Date` and `performance`. 
+
+### .FPS()
+
+Yay metrics! Returns the current FPS. It is not averaged.
+
+```js
+var lastFPS = tick.FPS();
+```
 
 ## Handle API
 
-  When a callback is added to Tick, a handle object is returned. This is their API.
+When a callback is added to `animation-loops`, a handle object is returned, which gives control
+to individual animations/loops. 
+
+```js
+var handle = tick.add(function (){
+    //
+})
+```
   
-### .stop()
+### handle.stop()
 
-  Stop the callback from ever being fired again.
+Immediately stop an animation/loop. It cannot be restarted.
 
-    > var handle = require('tick').add(callback);
-    > // callback is being called on every tick
-    > handle.stop();
-    > // callback has been removed
+```js
+// run our callback for about 100ms then stop.
+var handle = tick.add(callback);
+setTimeout(function(){
+  // this stops just this animation but leaves the others running.
+  handle.stop();
+}, 100)
+```
     
 ### .pause()
 
-  Prevent this callback from being called until resumed.
+Pause the animation/loop. 
 
-    > var handle = require('tick').add(callback);
-    > // callback is being called on every tick
-    > handle.pause();
-    > // callback has been paused
+```js
+// run the animation for 100ms then pause
+var handle = tick.add(callback);
+setTimeout(function (){
+  handle.pause();
+}, 100)
+```
     
 ### .resume()
 
-  Let a callback be called after being paused.
-  
-    > handle.pause();
-    > // callback won't fire until resumed
-    > handle.resume();
-    > // callback fires again.
- 
+Resume the animation/loop
+
+```js
+// run the animation for 100ms, pause for 100ms, then resume it again..
+var handle = tick.add(callback);
+setTimeout(function (){
+  handle.pause();
+}, 100)
+setTimeout(function (){
+  handle.resume();
+}, 200)
+```
+
+## Tests
+
+Assuming you have `grunt-cli` already installed, and you've cloned the repo:
+
+```sh
+# Just the once...
+$ npm install
+```
+
+```sh
+grunt test
+```
+
+## History
+
+This module used to be known as `tick`. That module is still avaliable on npm as `gm-tick` but this 
+version, which adds FPS metrics, optimisations and test coverage is to be prefered.
 
 ## License
 
