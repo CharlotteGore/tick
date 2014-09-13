@@ -10,7 +10,7 @@ var raf = require('raf'),
   precise = false;
 
 // use the highest precision timer available
-if ('performance' in window && window.performance.now){
+if (typeof window !== 'undefined' && 'performance' in window && window.performance.now){
 
   now = function(){ return window.performance.now(); };
   start = window.performance.timing.navigationStart;
